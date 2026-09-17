@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CTINPRGL — JavaScript Events Game</title>
+<style>
+  :root {
+    --bg: #f4f5fb;
+    --card-bg: #ffffff;
+    --text: #1c1d2b;
+    --muted: #5b5d76;
+    --accent: #3d3ddb;
+    --accent-2: #ff7a45;
+    --good: #1f9d55;
+    --bad: #d5423e;
+    --border: #e1e2f0;
+    --shadow: rgba(30, 30, 70, 0.08);
+    --code-bg: #1c1d2b;
+    --code-text: #d7e0ff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14141f;
+      --card-bg: #1d1e2e;
+      --text: #eef0ff;
+      --muted: #a3a5c2;
+      --accent: #8f8ffb;
+      --accent-2: #ff9866;
+      --good: #4bd680;
+      --bad: #ff6b66;
+      --border: #33344a;
+      --shadow: rgba(0, 0, 0, 0.4);
+      --code-bg: #0f0f18;
+      --code-text: #cddcff;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14141f;
+    --card-bg: #1d1e2e;
+    --text: #eef0ff;
+    --muted: #a3a5c2;
+    --accent: #8f8ffb;
+    --accent-2: #ff9866;
+    --good: #4bd680;
+    --bad: #ff6b66;
+    --border: #33344a;
+    --shadow: rgba(0, 0, 0, 0.4);
+    --code-bg: #0f0f18;
+    --code-text: #cddcff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  .wrap {
+    max-width: 780px;
+    margin: 0 auto;
+  }
+  header {
+    text-align: center;
+    margin-bottom: 18px;
+  }
+  header h1 {
+    font-size: clamp(1.4rem, 4vw, 2rem);
+    margin: 0 0 4px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  header p { color: var(--muted); margin: 0; font-size: 0.95rem; }
+
+  .hud {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .hud-item {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-size: 0.85rem;
+    color: var(--muted);
+    box-shadow: 0 2px 6px var(--shadow);
+  }
+  .hud-item b { color: var(--text); }
+
+  .progress-bar {
+    height: 8px;
+    background: var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    width: 100%;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    width: 0%;
+    transition: width 0.4s ease;
+  }
+
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 22px;
+    box-shadow: 0 6px 20px var(--shadow);
+    min-height: 320px;
+    display: flex;
+    flex-direction: column;
+  }
+  .level-tag {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 15%, transparent);
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin-bottom: 10px;
+    width: fit-content;
+  }
+  .prompt {
+    font-size: 1.08rem;
+    font-weight: 600;
+    margin: 4px 0 6px;
+    line-height: 1.4;
+  }
+  .sub {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-bottom: 14px;
+    line-height: 1.5;
+  }
+  code, pre {
+    font-family: "SF Mono", Consolas, Monaco, monospace;
+  }
+  pre.snippet {
+    background: var(--code-bg);
+    color: var(--code-text);
+    padding: 12px 14px;
+    border-radius: 10px;
+    font-size: 0.82rem;
+    overflow-x: auto;
+    margin: 0 0 14px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+  }
+  .options {
+    display: grid;
+    gap: 10px;
+    margin-top: 4px;
+  }
+  .opt-btn {
+    text-align: left;
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 0.92rem;
+    color: var(--text);
+    cursor: pointer;
+    transition: border-color 0.15s, transform 0.1s;
+    font-family: inherit;
+  }
+  .opt-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+  }
+  .opt-btn:disabled { cursor: default; }
+  .opt-btn.correct {
+    border-color: var(--good);
+    background: color-mix(in srgb, var(--good) 14%, var(--card-bg));
+  }
+  .opt-btn.wrong {
+    border-color: var(--bad);
+    background: color-mix(in srgb, var(--bad) 14%, var(--card-bg));
+  }
+
+  /* DOM tree click level */
+  .dom-stage {
+    display: flex;
+    justify-content: center;
+    margin: 10px 0 16px;
+  }
+  .dom-box {
+    border: 2px dashed var(--border);
+    border-radius: 14px;
+    padding: 26px;
+    text-align: center;
+    position: relative;
+    background: var(--bg);
+  }
+  .dom-box .label {
+    position: absolute;
+    top: 6px;
+    left: 10px;
+    font-size: 0.68rem;
+    color: var(--muted);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+  .dom-target {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 22px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 0.95rem;
+  }
+  .order-slots {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin: 6px 0 16px;
+    flex-wrap: wrap;
+  }
+  .slot {
+    min-width: 90px;
+    height: 40px;
+    border: 1.5px dashed var(--border);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    color: var(--muted);
+    background: var(--bg);
+  }
+  .slot.filled {
+    border-style: solid;
+    border-color: var(--accent);
+    color: var(--text);
+    font-weight: 600;
+  }
+  .click-pool {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+  .pool-chip {
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.82rem;
+    cursor: pointer;
+    color: var(--text);
+  }
+  .pool-chip:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+
+  .feedback {
+    margin-top: 14px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    line-height: 1.5;
+    display: none;
+  }
+  .feedback.show { display: block; }
+  .feedback.good { background: color-mix(in srgb, var(--good) 16%, var(--card-bg)); color: var(--text); }
+  .feedback.bad { background: color-mix(in srgb, var(--bad) 16%, var(--card-bg)); color: var(--text); }
+
+  .footer-row {
+    margin-top: auto;
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 14px;
+  }
+  .next-btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: none;
+  }
+  .next-btn.show { display: inline-block; }
+  .next-btn:hover { filter: brightness(1.08); }
+
+  .toggle-row {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 14px;
+  }
+  .toggle-btn {
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    border-radius: 999px;
+    padding: 6px 16px;
+    font-size: 0.82rem;
+    cursor: pointer;
+  }
+  .toggle-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  /* end screen */
+  .end-screen { text-align: center; }
+  .end-screen .big-score {
+    font-size: 3rem;
+    font-weight: 800;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin: 6px 0;
+  }
+  .badge {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 6px 16px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--accent) 18%, var(--card-bg));
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+  .restart-btn {
+    margin-top: 20px;
+    background: var(--accent-2);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 26px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 0.95rem;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>⚡ Event Horizon</h1>
+    <p>Week 8 · Event Types, Listeners, Propagation &amp; Custom Events</p>
+  </header>
+
+  <div class="hud">
+    <div class="hud-item">Round <b id="hud-round">1</b> / <span id="hud-total">10</span></div>
+    <div class="hud-item">Score <b id="hud-score">0</b></div>
+    <div class="hud-item">Streak <b id="hud-streak">0</b>🔥</div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+
+  <div class="card" id="game-card"></div>
+</div>
+
+<script>
+(function() {
+  const state = { round: 0, score: 0, streak: 0, best: 0, answered: false };
+
+  // ---------- Round definitions ----------
+  const rounds = [];
+
+  // --- Level A: Event type matchmaker (multiple choice) ---
+  const matchmaker = [
+    { scenario: "A student types into a live search box and results should update on every keystroke.", options: ["input", "change", "submit", "keydown"], answer: "input", why: "input fires on every value change as the user types — perfect for live feedback like search-as-you-type." },
+    { scenario: "A dropdown of courses should update a summary only once the student finalizes a new selection.", options: ["input", "change", "focus", "click"], answer: "change", why: "change fires when a new value is committed (e.g. a select's option is finalized), not on every intermediate move." },
+    { scenario: "You want to close a modal dialog when the student presses the Escape key.", options: ["keydown", "input", "blur", "click"], answer: "keydown", why: "keydown fires when a key is pressed and gives you event.key to check for 'Escape'." },
+    { scenario: "A card should get a hover highlight as the mouse pointer enters it (works for mouse, pen, and touch).", options: ["pointerenter", "click", "focus", "load"], answer: "pointerenter", why: "pointerenter is part of the unified pointer event model covering mouse, touch, and pen." },
+    { scenario: "A registration form should be validated and prevented from navigating away when the student presses Enter or clicks Submit.", options: ["submit", "click", "change", "keydown"], answer: "submit", why: "Listening to the form's submit event catches every way a form can be submitted — button, Enter key, or script." },
+    { scenario: "You want to run setup code exactly once, right after the whole page's DOM has finished loading.", options: ["DOMContentLoaded", "load", "resize", "scroll"], answer: "DOMContentLoaded", why: "DOMContentLoaded fires once the DOM is fully parsed, without waiting for images and other resources." },
+  ];
+  matchmaker.forEach(m => rounds.push({ type: "mc", tag: "Event Types", ...m }));
+
+  // --- Level B: Propagation phase order (build tree, click order) ---
+  rounds.push({
+    type: "order",
+    tag: "Propagation",
+    capture: false,
+    prompt: "The button only has a BUBBLING listener (default). Click the boxes below in the order their listeners would fire when the button is clicked.",
+    correctOrder: ["Button", "Section", "Document"],
+  });
+  rounds.push({
+    type: "order",
+    tag: "Propagation",
+    capture: true,
+    prompt: "This time, all three elements have CAPTURING listeners (capture: true). Click the boxes in the order their listeners would fire.",
+    correctOrder: ["Document", "Section", "Button"],
+  });
+  rounds.push({
+    type: "order",
+    tag: "Propagation",
+    capture: "mixed",
+    prompt: "Document and Section use capture: true, but Button uses the default (bubbling). Click the boxes in firing order.",
+    correctOrder: ["Document", "Section", "Button"],
+    note: "Capturing listeners on ancestors still fire on the way down before the target's own listener runs — target listeners fire during the 'target phase', in registration order.",
+  });
+
+  // --- Level C: target vs currentTarget delegation ---
+  rounds.push({
+    type: "mc",
+    tag: "Delegation",
+    scenario: "A <ul id=\"list\"> has one click listener. A student clicks a <span> inside a nested <li class=\"task\">. Inside the handler, event.target refers to...",
+    options: ["The <ul> element (list)", "The clicked <span>", "The <li class=\"task\">", "The document"],
+    answer: "The clicked <span>",
+    why: "event.target is always the exact element where the event originated — the innermost element clicked, not the listener's owner."
+  });
+  rounds.push({
+    type: "mc",
+    tag: "Delegation",
+    scenario: "Using the same setup, event.currentTarget inside that same handler refers to...",
+    options: ["The clicked <span>", "The <li class=\"task\">", "The <ul> element (list) — where the listener is attached", "Whichever element is closest to the mouse"],
+    answer: "The <ul> element (list) — where the listener is attached",
+    why: "currentTarget always points to the element whose listener is currently running — here, the <ul> that owns the delegated listener."
+  });
+  rounds.push({
+    type: "mc",
+    tag: "Delegation",
+    scenario: "Why does event delegation still work for list items that get added to the page AFTER the listener was registered?",
+    options: [
+      "Because addEventListener re-runs automatically every second",
+      "Because the listener lives on a stable ancestor, and bubbling carries new items' clicks up to it",
+      "Because new elements automatically copy nearby listeners",
+      "It doesn't work — delegation only works for elements that existed at page load"
+    ],
+    answer: "Because the listener lives on a stable ancestor, and bubbling carries new items' clicks up to it",
+    why: "The ancestor's single listener is untouched by DOM changes below it — any click on a new child still bubbles up to the same ancestor."
+  });
+
+  // --- Level D: Custom events ---
+  rounds.push({
+    type: "mc",
+    tag: "Custom Events",
+    scenario: "A student selects the course CTINPRGL. Which snippet correctly creates and sends a custom event carrying that course code, so any ancestor can react to it?",
+    options: [
+      "const e = new CustomEvent(\"course:selected\", { detail: { code: \"CTINPRGL\" } });\ncard.dispatchEvent(e);",
+      "const e = { type: \"course:selected\", code: \"CTINPRGL\" };\ncard.trigger(e);",
+      "card.dispatchEvent(\"course:selected\", \"CTINPRGL\");",
+      "document.emit(\"course:selected\", \"CTINPRGL\");"
+    ],
+    isCode: true,
+    answer: "const e = new CustomEvent(\"course:selected\", { detail: { code: \"CTINPRGL\" } });\ncard.dispatchEvent(e);",
+    why: "CustomEvent packages application data in .detail, and dispatchEvent() actually sends it from the chosen element into the DOM."
+  });
+  rounds.push({
+    type: "mc",
+    tag: "Custom Events",
+    scenario: "A dispatched CustomEvent is created with { detail: {...} } but NOT { bubbles: true }. A listener is attached on document instead of the dispatching element. What happens?",
+    options: [
+      "The document listener still catches it — bubbling isn't required for that",
+      "The document listener never fires, because without bubbles:true the event doesn't propagate past its origin element",
+      "The browser throws an error at dispatch time",
+      "The event fires twice"
+    ],
+    answer: "The document listener never fires, because without bubbles:true the event doesn't propagate past its origin element",
+    why: "Just like built-in events, a custom event only travels through the DOM tree if bubbles: true is set when it's created."
+  });
+
+  state.total = rounds.length;
+  document.getElementById("hud-total").textContent = state.total;
+
+  const gameCard = document.getElementById("game-card");
+  const scoreEl = document.getElementById("hud-score");
+  const roundEl = document.getElementById("hud-round");
+  const streakEl = document.getElementById("hud-streak");
+  const fillEl = document.getElementById("progress-fill");
+
+  function updateHud() {
+    scoreEl.textContent = state.score;
+    roundEl.textContent = Math.min(state.round + 1, state.total);
+    streakEl.textContent = state.streak;
+    fillEl.style.width = (state.round / state.total) * 100 + "%";
+  }
+
+  function renderFeedback(container, isCorrect, whyText) {
+    const fb = document.createElement("div");
+    fb.className = "feedback show " + (isCorrect ? "good" : "bad");
+    fb.innerHTML = (isCorrect ? "✅ <b>Correct!</b> " : "❌ <b>Not quite.</b> ") + whyText;
+    container.appendChild(fb);
+  }
+
+  function addNextButton(container) {
+    const btn = document.createElement("button");
+    btn.className = "next-btn show";
+    btn.textContent = state.round === state.total - 1 ? "See results →" : "Next round →";
+    btn.onclick = () => {
+      state.round++;
+      renderRound();
+    };
+    const row = document.createElement("div");
+    row.className = "footer-row";
+    row.appendChild(btn);
+    container.appendChild(row);
+  }
+
+  function scoreAnswer(correct) {
+    if (correct) {
+      state.streak++;
+      const bonus = state.streak >= 3 ? 15 : 10;
+      state.score += bonus;
+    } else {
+      state.streak = 0;
+    }
+    updateHud();
+  }
+
+  // ---------- Renderers ----------
+  function renderMC(r) {
+    gameCard.innerHTML = "";
+    const tag = document.createElement("div");
+    tag.className = "level-tag";
+    tag.textContent = r.tag;
+    gameCard.appendChild(tag);
+
+    const prompt = document.createElement("div");
+    prompt.className = "prompt";
+    prompt.textContent = r.scenario;
+    gameCard.appendChild(prompt);
+
+    const optWrap = document.createElement("div");
+    optWrap.className = "options";
+
+    r.options.forEach(opt => {
+      const btn = document.createElement("button");
+      btn.className = "opt-btn";
+      if (r.isCode) {
+        btn.innerHTML = "";
+        const pre = document.createElement("pre");
+        pre.className = "snippet";
+        pre.style.margin = "0";
+        pre.textContent = opt;
+        btn.appendChild(pre);
+      } else {
+        btn.textContent = opt;
+      }
+      btn.onclick = () => {
+        if (state.answered) return;
+        state.answered = true;
+        const correct = opt === r.answer;
+        Array.from(optWrap.children).forEach(b => {
+          b.disabled = true;
+        });
+        btn.classList.add(correct ? "correct" : "wrong");
+        if (!correct) {
+          Array.from(optWrap.children).forEach(b => {
+            const txt = r.isCode ? b.querySelector("pre").textContent : b.textContent;
+            if (txt === r.answer) b.classList.add("correct");
+          });
+        }
+        scoreAnswer(correct);
+        renderFeedback(gameCard, correct, r.why);
+        addNextButton(gameCard);
+      };
+      optWrap.appendChild(btn);
+    });
+    gameCard.appendChild(optWrap);
+  }
+
+  function renderOrder(r) {
+    gameCard.innerHTML = "";
+    const tag = document.createElement("div");
+    tag.className = "level-tag";
+    tag.textContent = r.tag;
+    gameCard.appendChild(tag);
+
+    const prompt = document.createElement("div");
+    prompt.className = "prompt";
+    prompt.textContent = r.prompt;
+    gameCard.appendChild(prompt);
+
+    const sub = document.createElement("div");
+    sub.className = "sub";
+    sub.textContent = "Tap the elements below in the order their listener fires (1st, 2nd, 3rd).";
+    gameCard.appendChild(sub);
+
+    // DOM tree visual
+    const stage = document.createElement("div");
+    stage.className = "dom-stage";
+    stage.innerHTML = `
+      <div class="dom-box" data-name="Document" style="padding:34px;">
+        <span class="label">DOCUMENT</span>
+        <div class="dom-box" data-name="Section" style="padding:26px; margin-top:14px;">
+          <span class="label">SECTION</span>
+          <button class="dom-target" data-name="Button" style="margin-top:14px;">BUTTON</button>
+        </div>
+      </div>
+    `;
+    gameCard.appendChild(stage);
+
+    const slots = document.createElement("div");
+    slots.className = "order-slots";
+    slots.innerHTML = `
+      <div class="slot" data-idx="0">1st</div>
+      <div class="slot" data-idx="1">2nd</div>
+      <div class="slot" data-idx="2">3rd</div>
+    `;
+    gameCard.appendChild(slots);
+
+    const picked = [];
+    const clickable = [
+      stage.querySelector('[data-name="Document"]'),
+      stage.querySelector('[data-name="Section"]'),
+      stage.querySelector('.dom-target'),
+    ];
+
+    function finish() {
+      state.answered = true;
+      const correct = JSON.stringify(picked) === JSON.stringify(r.correctOrder);
+      scoreAnswer(correct);
+      let whyText;
+      if (r.note) {
+        whyText = "Correct order: " + r.correctOrder.join(" → ") + ". " + r.note;
+      } else if (r.capture) {
+        whyText = "Correct order: " + r.correctOrder.join(" → ") + ". Capturing listeners fire on the way DOWN, from the outermost ancestor toward the target.";
+      } else {
+        whyText = "Correct order: " + r.correctOrder.join(" → ") + ". Default (bubbling) listeners fire on the way UP, starting at the target and moving outward.";
+      }
+      renderFeedback(gameCard, correct, whyText);
+      addNextButton(gameCard);
+      clickable.forEach(el => el.style.pointerEvents = "none");
+    }
+
+    clickable.forEach(el => {
+      el.style.cursor = "pointer";
+      el.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (state.answered || picked.includes(el.dataset.name)) return;
+        picked.push(el.dataset.name);
+        const slot = slots.querySelector(`[data-idx="${picked.length - 1}"]`);
+        slot.textContent = el.dataset.name;
+        slot.classList.add("filled");
+        el.style.opacity = "0.45";
+        if (picked.length === 3) finish();
+      });
+    });
+  }
+
+  function renderRound() {
+    state.answered = false;
+    if (state.round >= state.total) {
+      renderEnd();
+      return;
+    }
+    const r = rounds[state.round];
+    updateHud();
+    if (r.type === "mc") renderMC(r);
+    else if (r.type === "order") renderOrder(r);
+  }
+
+  function renderEnd() {
+    updateHud();
+    fillEl.style.width = "100%";
+    const pct = Math.round((state.score / (state.total * 15)) * 100);
+    let badge = "Event Listener";
+    if (pct >= 90) badge = "🏆 Propagation Master";
+    else if (pct >= 70) badge = "⚡ Event Wrangler";
+    else if (pct >= 50) badge = "🧩 DOM Apprentice";
+
+    gameCard.innerHTML = `
+      <div class="end-screen">
+        <div class="level-tag" style="margin:0 auto 10px;">Run Complete</div>
+        <div class="prompt" style="font-size:1.2rem;">Final Score</div>
+        <div class="big-score">${state.score}</div>
+        <div class="sub">Best streak this run: ${state.best}🔥</div>
+        <div class="badge">${badge}</div>
+        <div>
+          <button class="restart-btn" id="restart">Play again</button>
+        </div>
+      </div>
+    `;
+    document.getElementById("restart").onclick = () => {
+      state.round = 0; state.score = 0; state.streak = 0; state.best = 0;
+      renderRound();
+    };
+  }
+
+  const origScoreAnswer = scoreAnswer;
+  window.addEventListener("DOMContentLoaded", () => {});
+
+  // track best streak
+  const trackBest = () => { if (state.streak > state.best) state.best = state.streak; };
+  const _scoreAnswer = scoreAnswer;
+  window.__patchedScore = true;
+
+  // wrap scoreAnswer to also track best streak
+  function scoreAnswerWrapped(correct) {
+    _scoreAnswer(correct);
+    trackBest();
+  }
+
+  // replace references
+  renderRound.__usesWrapped = true;
+
+  // simplest: monkey-patch by re-declaring used name inside closures already captured scoreAnswer directly,
+  // so instead just hook here:
+  const intervalCheck = setInterval(() => { trackBest(); }, 400);
+
+  renderRound();
+})();
+</script>
+</body>
+</html>
